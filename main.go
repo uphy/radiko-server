@@ -10,13 +10,15 @@ import (
 )
 
 var (
-	baseURL string
-	dataDir string
+	baseURL   string
+	dataDir   string
+	staticDir string
 )
 
 func main() {
 	flag.StringVar(&baseURL, "base", "http://localhost:8080/", "")
 	flag.StringVar(&dataDir, "data", "data", "")
+	flag.StringVar(&staticDir, "static", "static", "")
 	flag.Parse()
 
 	l := library.New(dataDir)
@@ -39,7 +41,7 @@ func main() {
 	e.GET("/recordings/recording/:stationID/:start", a.Get)
 	e.GET("/recordings/recording/:stationID/:start/playlist", a.M3U8)
 	e.GET("/recordings/recording/:stationID/:start/:file", a.File)
-	e.Static("/", "frontend/dist")
+	e.Static("/", staticDir)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))
