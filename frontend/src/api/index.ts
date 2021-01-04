@@ -17,6 +17,13 @@ const baseURL = (function() {
   if (!u.endsWith("/")) {
     u = u + "/";
   }
+  let pathname = window.location.pathname;
+  if (pathname.startsWith("/")) {
+    pathname = pathname.substring(1);
+  }
+  if (pathname.length > 0) {
+    u = u + pathname;
+  }
   return u;
 })();
 
