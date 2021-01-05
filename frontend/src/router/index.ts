@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import RecordingsPage from "../views/RecordingsPage.vue";
 import RecordPage from "../views/RecordPage.vue";
 import PlayPage from "../views/PlayPage.vue";
@@ -23,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(baseURL),
+  history: createWebHashHistory(baseURL),
   routes,
 });
 
