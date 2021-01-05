@@ -12,20 +12,7 @@ export interface Status {
   downloadProgress: number;
 }
 
-const baseURL = (function() {
-  let u: string = process.env.VUE_APP_API_ENDPOINT;
-  if (!u.endsWith("/")) {
-    u = u + "/";
-  }
-  let pathname = window.location.pathname;
-  if (pathname.startsWith("/")) {
-    pathname = pathname.substring(1);
-  }
-  if (pathname.length > 0) {
-    u = u + pathname;
-  }
-  return u;
-})();
+const baseURL = window.location.pathname;
 
 const a = axios.create({
   baseURL,

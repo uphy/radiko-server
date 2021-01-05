@@ -73,8 +73,6 @@ func main() {
 		e.Static(relativePath, staticDir)
 	}
 
-	//a.Static(e, relativePath, staticDir)
-
 	// Start server
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
 }
