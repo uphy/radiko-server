@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/labstack/echo"
@@ -47,6 +50,10 @@ func main() {
 		baseURL = baseURL + "/"
 	}
 
+	if err := updateStaticBase(); err != nil {
+		panic(err)
+	}
+
 	l := library.New(dataDir)
 
 	if err := l.Load(); err != nil {
@@ -75,4 +82,19 @@ func main() {
 
 	// Start server
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
+}
+
+func updateStaticBase() error {
+	indexFile := filepath.Join(staticDir, "index.html")
+	b, err := ioutil.ReadFile(indexFile)
+	if err != nil {
+		return err
+	}
+	r := regexp.MustCompile(`<base href="(.*?)">`)
+	rel := relativePath
+	if !strings.HasSuffix(rel, "/") {
+		rel = rel + "/"
+	}
+	replaced := r.ReplaceAll(b, []byte(fmt.Sprintf(`<base href="%s">`, rel)))
+	return ioutil.WriteFile(indexFile, replaced, 0777)
 }

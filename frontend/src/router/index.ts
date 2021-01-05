@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import RecordingsPage from "../views/RecordingsPage.vue";
 import RecordPage from "../views/RecordPage.vue";
 import PlayPage from "../views/PlayPage.vue";
+import {baseURL} from '../config'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -22,7 +23,7 @@ const routes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(window.location.pathname),
+  history: createWebHistory(baseURL),
   routes,
 });
 

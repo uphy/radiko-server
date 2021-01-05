@@ -1,3 +1,4 @@
+import { baseURL } from "../config";
 import axios from "axios";
 
 export interface Recording {
@@ -11,8 +12,6 @@ export interface Status {
   status: string;
   downloadProgress: number;
 }
-
-const baseURL = window.location.pathname;
 
 const a = axios.create({
   baseURL,
