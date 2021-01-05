@@ -1,4 +1,10 @@
 module.exports = {
+    pages: {
+        index: {
+            entry: "src/main.ts",
+            title: "Radiko Server",
+        }
+    },
     devServer: {
         port: 8081,
         host: '0.0.0.0',
