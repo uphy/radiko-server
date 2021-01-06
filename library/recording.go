@@ -93,6 +93,7 @@ func (l *recordingDirectory) saveJSON(file string, v interface{}) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	return json.NewEncoder(f).Encode(v)
 }
 
@@ -101,9 +102,18 @@ func (l *recordingDirectory) loadJSON(file string, v interface{}) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	return json.NewDecoder(f).Decode(&v)
 }
 
 func (l *recordingDirectory) filesDir() string {
 	return filepath.Join(l.dir, "files")
+}
+
+func (l *recordingDirectory) ready() bool {
+	status, err := l.loadStatus()
+	if err != nil {
+		return false
+	}
+	return status.Status == StatusReady
 }

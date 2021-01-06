@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -54,11 +55,19 @@ func main() {
 		panic(err)
 	}
 
-	l := library.New(dataDir)
+	l, err := library.New(dataDir)
+	if err != nil {
+		panic(err)
+	}
 
 	if err := l.Load(); err != nil {
 		panic(err)
 	}
+
+	go func() {
+		l.ScanAndRecord()
+		time.Sleep(time.Hour)
+	}()
 
 	e := echo.New()
 	a := api.New(l, baseURL)
