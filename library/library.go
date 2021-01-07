@@ -131,29 +131,27 @@ func (l *Library) Record(stationID string, start time.Time) error {
 	}
 
 	// Download
-	go func() {
-		if err := bulkDownload(chunklist, dir.filesDir(), func(progress float32) {
-			dir.updateStatus(&Status{
-				Status:           StatusDownloading,
-				DownloadProgress: progress,
-			}, false)
-		}); err != nil {
-			// Failed to download
-			os.RemoveAll(dir.filesDir())
-			dir.updateStatus(&Status{
-				Status:           StatusError,
-				Error:            fmt.Sprintf("Failed to download audio files: %v", err),
-				DownloadProgress: 0,
-			}, true)
-			log.Errorf("Failed to download audio files: %w", err)
-		} else {
-			// Successfully downloaded
-			dir.updateStatus(&Status{
-				Status:           StatusReady,
-				DownloadProgress: 1,
-			}, true)
-		}
-	}()
+	if err := bulkDownload(chunklist, dir.filesDir(), func(progress float32) {
+		dir.updateStatus(&Status{
+			Status:           StatusDownloading,
+			DownloadProgress: progress,
+		}, false)
+	}); err != nil {
+		// Failed to download
+		os.RemoveAll(dir.filesDir())
+		dir.updateStatus(&Status{
+			Status:           StatusError,
+			Error:            fmt.Sprintf("Failed to download audio files: %v", err),
+			DownloadProgress: 0,
+		}, true)
+		log.Errorf("Failed to download audio files: %w", err)
+	} else {
+		// Successfully downloaded
+		dir.updateStatus(&Status{
+			Status:           StatusReady,
+			DownloadProgress: 1,
+		}, true)
+	}
 	return nil
 }
 

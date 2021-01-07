@@ -1,10 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/labstack/gommon/log"
 )
 
 type RecordRequest struct {
@@ -21,9 +21,10 @@ func (a *API) Record(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid 'start'")
 	}
-	if err := a.library.Record(req.StationID, start); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError,
-			fmt.Sprintf("Failed to record: %s", err.Error()))
-	}
-	return nil
+	go func() {
+		if err := a.library.Record(req.StationID, start); err != nil {
+			log.Error("Failed to record %s", err.Error())
+		}
+	}()
+	return c.NoContent(http.StatusAccepted)
 }
