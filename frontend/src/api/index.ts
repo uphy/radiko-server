@@ -38,7 +38,10 @@ class Api {
     return data.status;
   }
   getPlaylistUrl(stationID: string, start: string): string {
-    return `${baseURL}recordings/recording/${stationID}/${start}/playlist`;
+    return `${baseURL}recordings/recording/${stationID}/${start}/audio?format=m3u8`;
+  }
+  getMp3Url(stationID: string, start: string): string {
+    return `${baseURL}recordings/recording/${stationID}/${start}/audio?format=mp3`;
   }
 }
 

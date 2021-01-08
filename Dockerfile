@@ -19,7 +19,7 @@ RUN yarn build
 
 FROM alpine:3.12.3
 
-RUN apk --no-cache add tzdata
+RUN apk --no-cache add tzdata ffmpeg
 
 WORKDIR /radiko-server/
 COPY --from=backend-builder /radiko-server .

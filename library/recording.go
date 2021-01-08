@@ -9,6 +9,7 @@ import (
 
 const (
 	StatusDownloading = "DOWNLOADING"
+	StatusConverting  = "CONVERTING"
 	StatusReady       = "READY"
 	StatusError       = "FAILED"
 )
@@ -108,6 +109,14 @@ func (l *recordingDirectory) loadJSON(file string, v interface{}) error {
 
 func (l *recordingDirectory) filesDir() string {
 	return filepath.Join(l.dir, "files")
+}
+
+func (l *recordingDirectory) aacFile() string {
+	return filepath.Join(l.dir, "all.aac")
+}
+
+func (l *recordingDirectory) mp3File() string {
+	return filepath.Join(l.dir, "all.mp3")
 }
 
 func (l *recordingDirectory) ready() bool {

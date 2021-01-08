@@ -23,7 +23,7 @@ func (a *API) Record(c echo.Context) error {
 	}
 	go func() {
 		if err := a.library.Record(req.StationID, start); err != nil {
-			log.Error("Failed to record %s", err.Error())
+			log.Errorf("Failed to record %s", err.Error())
 		}
 	}()
 	return c.NoContent(http.StatusAccepted)

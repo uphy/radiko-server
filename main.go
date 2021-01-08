@@ -11,6 +11,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/uphy/radiko-server/api"
 	"github.com/uphy/radiko-server/library"
 )
@@ -28,6 +29,7 @@ var (
 	// "foo": not valid
 	relativePath string
 	port         int
+	migrate      bool
 )
 
 func main() {
@@ -36,6 +38,7 @@ func main() {
 	flag.StringVar(&staticDir, "static", "static", "")
 	flag.StringVar(&relativePath, "rel", "", "")
 	flag.IntVar(&port, "port", 8080, "")
+	flag.BoolVar(&migrate, "migrate", false, "")
 	flag.Parse()
 
 	if len(relativePath) != 0 {
@@ -64,9 +67,17 @@ func main() {
 		panic(err)
 	}
 
+	if migrate {
+		if err := l.Migrate(); err != nil {
+			log.Errorf("Failed to migrate: %v", err)
+		}
+	}
+
 	go func() {
-		l.ScanAndRecord()
-		time.Sleep(time.Hour)
+		for {
+			l.ScanAndRecord()
+			time.Sleep(time.Hour)
+		}
 	}()
 
 	e := echo.New()
@@ -81,7 +92,7 @@ func main() {
 	e.POST(relativePath+"/recordings/record", a.Record)
 	e.GET(relativePath+"/recordings/", a.List)
 	e.GET(relativePath+"/recordings/recording/:stationID/:start", a.Get)
-	e.GET(relativePath+"/recordings/recording/:stationID/:start/playlist", a.M3U8)
+	e.GET(relativePath+"/recordings/recording/:stationID/:start/audio", a.Audio)
 	e.GET(relativePath+"/recordings/recording/:stationID/:start/:file", a.File)
 	if len(relativePath) == 0 {
 		e.Static("/", staticDir)

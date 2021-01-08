@@ -144,13 +144,86 @@ func (l *Library) Record(stationID string, start time.Time) error {
 			Error:            fmt.Sprintf("Failed to download audio files: %v", err),
 			DownloadProgress: 0,
 		}, true)
-		log.Errorf("Failed to download audio files: %w", err)
-	} else {
-		// Successfully downloaded
+		return err
+	}
+	dir.updateStatus(&Status{
+		Status:           StatusConverting,
+		DownloadProgress: 1,
+	}, true)
+	// Concat aac files
+	concatedFile, err := ConcatAACFilesFromList(l.ctx, dir.filesDir())
+	if err != nil {
 		dir.updateStatus(&Status{
-			Status:           StatusReady,
+			Status:           StatusError,
+			Error:            fmt.Sprintf("Failed to concat aac files: %v", err),
 			DownloadProgress: 1,
 		}, true)
+		return err
+	}
+	os.Remove(dir.aacFile())
+	if err := os.Rename(concatedFile, dir.aacFile()); err != nil {
+		os.Remove(concatedFile)
+		dir.updateStatus(&Status{
+			Status:           StatusError,
+			Error:            fmt.Sprintf("Failed to rename aac: %v", err),
+			DownloadProgress: 1,
+		}, true)
+		return err
+	}
+	// Convert aac file
+	os.Remove(dir.mp3File())
+	if err := ConvertAACtoMP3(l.ctx, dir.aacFile(), dir.mp3File()); err != nil {
+		os.Remove(dir.mp3File())
+		dir.updateStatus(&Status{
+			Status:           StatusError,
+			Error:            fmt.Sprintf("Failed to convert aac to mp3: %v", err),
+			DownloadProgress: 1,
+		}, true)
+		return err
+	}
+	// Finished
+	dir.updateStatus(&Status{
+		Status:           StatusReady,
+		DownloadProgress: 1,
+	}, true)
+	return nil
+}
+
+func (l *Library) Migrate() error {
+	recordings, err := l.List()
+	if err != nil {
+		return err
+	}
+	for _, recording := range recordings {
+		log.Infof("Migrating recording directory: recording=%v", recording)
+		if err := l.generateAACMP3(recording.StationID, recording.Start); err != nil {
+			log.Errorf("Failed to generate AAC/MP3 file: %s", err)
+		}
+	}
+	return nil
+}
+
+// for migration
+func (l *Library) generateAACMP3(stationID string, start time.Time) error {
+	dir := l.recordingDirectory(stationID, start)
+	aacFile := dir.aacFile()
+	mp3File := dir.mp3File()
+	if _, err := os.Stat(aacFile); os.IsNotExist(err) {
+		concatedFile, err := ConcatAACFilesFromList(l.ctx, dir.filesDir())
+		if err != nil {
+			return err
+		}
+		if err := os.Rename(concatedFile, aacFile); err != nil {
+			os.Remove(concatedFile)
+			return err
+		}
+	}
+	if _, err := os.Stat(mp3File); os.IsNotExist(err) {
+		// Convert aac file
+		if err := ConvertAACtoMP3(l.ctx, aacFile, mp3File); err != nil {
+			os.Remove(mp3File)
+			return err
+		}
 	}
 	return nil
 }
@@ -202,6 +275,14 @@ func (l *Library) GenerateM3U8(baseURL string, stationID string, start time.Time
 		return strings.Compare(f1, f2) < 0
 	})
 	return dir.generateM3U8(fmt.Sprintf("%srecordings/recording/%s/%s/", baseURL, stationID, l.FormatTime(start)), filenames, w)
+}
+
+func (l *Library) MP3(stationID string, start time.Time) string {
+	return l.recordingDirectory(stationID, start).mp3File()
+}
+
+func (l *Library) AAC(stationID string, start time.Time) string {
+	return l.recordingDirectory(stationID, start).aacFile()
 }
 
 func (l *Library) RegisterKeyword(keyword string) error {
