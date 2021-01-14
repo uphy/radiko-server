@@ -75,7 +75,12 @@ func main() {
 
 	go func() {
 		for {
-			l.ScanAndRecord()
+			log.Infof("Scanning programs for recording...")
+			if err := l.ScanAndRecord(); err != nil {
+				log.Errorf("Failed to record: %v", err)
+			} else {
+				log.Infof("Successfully scan programs for recording.")
+			}
 			time.Sleep(time.Hour)
 		}
 	}()

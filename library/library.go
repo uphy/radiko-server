@@ -309,7 +309,7 @@ func (l *Library) ScanAndRecord() error {
 	currentTime := time.Now().Add(-time.Hour)
 	stations, err := l.client.GetStations(l.ctx, time.Now())
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to get stations: %w", err)
 	}
 
 	for _, station := range stations {
@@ -317,14 +317,14 @@ func (l *Library) ScanAndRecord() error {
 		log.Infof("Getting weekly programs: stationID=%s", stationID)
 		programs, err := l.client.GetWeeklyPrograms(l.ctx, stationID)
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to get weekly programs: stationID=%s, err=%w", stationID, err)
 		}
 		for _, program := range programs {
 			for _, prog := range program.Progs.Progs {
 				// Check if the program has finished
 				programEnd, err := l.ParseTime(prog.To)
 				if err != nil {
-					return err
+					return fmt.Errorf("Failed to parse program end time: prog=%v, err=%w", prog, err)
 				}
 				if programEnd.After(currentTime) {
 					continue
@@ -346,10 +346,10 @@ func (l *Library) ScanAndRecord() error {
 				log.Infof("Downloading program: stationID=%s, start=%s, title=%s", stationID, prog.Ft, prog.Title)
 				t, err := l.ParseTime(prog.Ft)
 				if err != nil {
-					return err
+					return fmt.Errorf("Failed to parse program start time: prog=%v, err=%w", prog, err)
 				}
 				if err := l.Record(stationID, t); err != nil {
-					return err
+					return fmt.Errorf("Failed to record: stationID=%s, start=%s, err=%w", stationID, prog.Ft, err)
 				}
 			}
 		}
