@@ -121,7 +121,7 @@ func (l *Library) Record(stationID string, start time.Time) error {
 	// Get M3U8 playlist
 	uri, err := l.client.TimeshiftPlaylistM3U8(l.ctx, stationID, start)
 	if err != nil {
-		return fmt.Errorf("Failed to get m3u8 playlist url: %w", err)
+		return fmt.Errorf("Failed to get m3u8 playlist url.  The radio program may not be ready for timeshift play: %w", err)
 	}
 
 	// Download audio files

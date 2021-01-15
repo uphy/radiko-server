@@ -55,7 +55,7 @@ func main() {
 	}
 
 	if err := updateStaticBase(); err != nil {
-		panic(err)
+		log.Errorf("Failed to update static base dir: %v", err)
 	}
 
 	l, err := library.New(dataDir)
