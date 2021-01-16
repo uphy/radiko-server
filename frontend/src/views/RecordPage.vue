@@ -42,6 +42,9 @@ export default defineComponent({
           /* eslint-disable */
           let handle = setInterval(async () => {
             const status = await api.getStatus(stationId, start);
+            if (status === null) {
+              return;
+            }
             if (status.status !== "DOWNLOADING") {
               clearInterval(handle);
               state.status = "";

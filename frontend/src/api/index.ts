@@ -8,6 +8,18 @@ export interface Recording {
   title: string;
 }
 
+export interface RecordingDetail extends Recording {
+  description: string;
+  subtitle: string;
+  url: string;
+  info: string;
+}
+
+export interface RecordingDetailResponse {
+  recording: RecordingDetail;
+  status: Status;
+}
+
 export interface Status {
   status: string;
   downloadProgress: number;
@@ -31,6 +43,11 @@ class Api {
       stationId,
       start,
     });
+  }
+  async getRecording(stationId: string, start: string): Promise<RecordingDetailResponse | null> {
+    const data = (await a.get(`recordings/recording/${stationId}/${start}`))
+      .data;
+    return data;
   }
   async getStatus(stationId: string, start: string): Promise<Status> {
     const data = (await a.get(`recordings/recording/${stationId}/${start}`))
