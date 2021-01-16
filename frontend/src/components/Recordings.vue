@@ -12,13 +12,16 @@
         :key="i"
       >
         <div class="recording-title">
-          <router-link :to="routerLink(recording)">{{
-            recording.title
-          }}</router-link>
+          <router-link :to="routerLink(recording.recording)">
+            <span :style="{color: recording.rate === 100 ? '#d489fb': recording.rate > 0 ? '#8f00d8' : '#333'}">{{ recording.recording.title }}</span>
+            <i v-if="recording.rate === 100" class="bi bi-check"></i>
+            <i v-else-if="recording.rate > 0" class="bi bi-music-note"></i>
+          </router-link>
         </div>
         <div class="recording-date">
-          {{ recording.start.toLocaleString() }} -
-          {{ recording.end.toLocaleString() }}
+          {{ recording.recording.start.toLocaleString() }} -
+          {{ recording.recording.end.toLocaleString() }}
+          <span class="octicons octicons-check"></span><span v-if="recording.rate > 0">({{ recording.rate }} % played)</span>
         </div>
       </div>
     </div>
@@ -28,13 +31,18 @@
 <script lang="ts">
 import { computed, defineComponent } from "vue";
 import { Recording } from "../api";
+import { playerStateRepository } from "../repositories";
 
 type Props = {
   recordings: Recording[];
 };
 
 class RecordingsByDate {
-  constructor(public date: MonthDate, public recordings: Recording[]) {}
+  constructor(public date: MonthDate, public recordings: RecordingWrapper[]) {}
+}
+
+class RecordingWrapper {
+  constructor(public recording: Recording, public rate: number) {}
 }
 
 class MonthDate {
@@ -66,20 +74,32 @@ export default defineComponent({
       }
       return s;
     };
-
+    const dateToString = (date: Date) => {
+      return `${date.getFullYear()}${p((date.getMonth() + 1).toString(), 2)}${p(
+        date.getDate().toString(),
+        2
+      )}${p(date.getHours().toString(), 2)}${p(
+        date.getMinutes().toString(),
+        2
+      )}${p(date.getSeconds().toString(), 2)}`;
+    };
+    const getPlayedRate = (recording: Recording): number => {
+      const all = recording.end.getTime() - recording.start.getTime();
+      if (all === 0) {
+        return 0;
+      }
+      const rate =
+        playerStateRepository.pos(
+          recording.stationId,
+          dateToString(recording.start)
+        ) /
+        (all / 1000);
+      return Math.floor(rate * 100 + 0.5);
+    };
     return {
       routerLink(recording: any): string {
         const start: Date = recording.start;
-        return `/recordings/${recording.stationId}/${start.getFullYear()}${p(
-          (start.getMonth() + 1).toString(),
-          2
-        )}${p(start.getDate().toString(), 2)}${p(
-          start.getHours().toString(),
-          2
-        )}${p(start.getMinutes().toString(), 2)}${p(
-          start.getSeconds().toString(),
-          2
-        )}`;
+        return `/recordings/${recording.stationId}/${dateToString(start)}`;
       },
       recordingsGroupByDate: computed(() => {
         let result: RecordingsByDate[] = [];
@@ -99,7 +119,9 @@ export default defineComponent({
             current = new RecordingsByDate(date, []);
             result.push(current);
           }
-          current.recordings.push(recording);
+          current.recordings.push(
+            new RecordingWrapper(recording, getPlayedRate(recording))
+          );
         });
         return result;
       }),
@@ -126,9 +148,6 @@ export default defineComponent({
 }
 .recording-title {
   font-size: 1rem;
-}
-.recording-title > a {
-  color: #333333;
 }
 .recording-date {
   font-size: 0.5rem;
