@@ -21,6 +21,7 @@ type Library struct {
 	ctx        context.Context
 	recordings []Recording
 	keywords   *keywords
+	lastUpdate *time.Time
 }
 
 const (
@@ -43,7 +44,7 @@ func New(baseDir string) (*Library, error) {
 		return nil, err
 	}
 
-	return &Library{baseDir, location, client, ctx, nil, keywords}, nil
+	return &Library{baseDir, location, client, ctx, nil, keywords, nil}, nil
 }
 
 // Load loads local library file system.
@@ -79,15 +80,25 @@ func (l *Library) List() ([]Recording, error) {
 	return l.recordings, nil
 }
 
+func (l *Library) refreshClient() error {
+	if l.lastUpdate != nil && time.Now().Before((*l.lastUpdate).Add(time.Minute*5)) {
+		return nil
+	}
+
+	client, err := radiko.New("")
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	client.AuthorizeToken(ctx)
+	l.client = client
+	t := time.Now()
+	l.lastUpdate = &t
+	return nil
+}
+
 // Record records radiko's program
 func (l *Library) Record(stationID string, start time.Time) error {
-	// Get program
-	pg, err := l.client.GetProgramByStartTime(l.ctx, stationID, start)
-	if err != nil {
-		return fmt.Errorf("Failed to get program: stationID=%s, start=%s, cause=%w", stationID, start, err)
-	}
-	end, _ := l.ParseTime(pg.To)
-
 	dir := l.recordingDirectory(stationID, start)
 	dir.create()
 
@@ -95,6 +106,16 @@ func (l *Library) Record(stationID string, start time.Time) error {
 		log.Infof("Already recorded: stationID=%s, start=%s", stationID, start)
 		return nil
 	}
+
+	// Get program
+	if err := l.refreshClient(); err != nil {
+		return err
+	}
+	pg, err := l.client.GetProgramByStartTime(l.ctx, stationID, start)
+	if err != nil {
+		return fmt.Errorf("Failed to get program: stationID=%s, start=%s, cause=%w", stationID, start, err)
+	}
+	end, _ := l.ParseTime(pg.To)
 
 	detail := RecordingDetail{
 		Recording: Recording{
@@ -307,6 +328,9 @@ func (l *Library) ScanAndRecord() error {
 	}
 
 	currentTime := time.Now().Add(-time.Hour)
+	if err := l.refreshClient(); err != nil {
+		return err
+	}
 	stations, err := l.client.GetStations(l.ctx, time.Now())
 	if err != nil {
 		return fmt.Errorf("Failed to get stations: %w", err)
