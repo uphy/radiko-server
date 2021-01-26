@@ -13,7 +13,17 @@
       >
         <div class="recording-title">
           <router-link :to="routerLink(recording.recording)">
-            <span :style="{color: recording.rate === 100 ? '#d489fb': recording.rate > 0 ? '#8f00d8' : '#333'}">{{ recording.recording.title }}</span>
+            <span
+              :style="{
+                color:
+                  recording.rate === 100
+                    ? '#d489fb'
+                    : recording.rate > 0
+                    ? '#8f00d8'
+                    : '#333',
+              }"
+              >{{ recording.recording.title }}</span
+            >
             <i v-if="recording.rate === 100" class="bi bi-check"></i>
             <i v-else-if="recording.rate > 0" class="bi bi-music-note"></i>
           </router-link>
@@ -21,7 +31,10 @@
         <div class="recording-date">
           {{ recording.recording.start.toLocaleString() }} -
           {{ recording.recording.end.toLocaleString() }}
-          <span class="octicons octicons-check"></span><span v-if="recording.rate > 0">({{ recording.rate }} % played)</span>
+          <span class="octicons octicons-check"></span
+          ><span v-if="recording.rate > 0"
+            >({{ recording.rate }} % played)</span
+          >
         </div>
       </div>
     </div>
@@ -46,7 +59,21 @@ class RecordingWrapper {
 }
 
 class MonthDate {
-  constructor(public year: number, public month: number, public date: number) {}
+  static readonly DAY_STRING = [
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+  ];
+  constructor(
+    public year: number,
+    public month: number,
+    public date: number,
+    public day: number
+  ) {}
   equals(other: MonthDate): boolean {
     return (
       this.year === other.year &&
@@ -55,7 +82,9 @@ class MonthDate {
     );
   }
   toString(): string {
-    return `${this.year}/${this.month}/${this.date}`;
+    return `${this.year}/${this.month}/${this.date} (${
+      MonthDate.DAY_STRING[this.day]
+    })`;
   }
 }
 
@@ -113,7 +142,8 @@ export default defineComponent({
           const date = new MonthDate(
             recording.start.getFullYear(),
             recording.start.getMonth() + 1,
-            recording.start.getDate()
+            recording.start.getDate(),
+            recording.start.getDay()
           );
           if (current === null || !current.date.equals(date)) {
             current = new RecordingsByDate(date, []);
