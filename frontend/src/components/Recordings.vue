@@ -13,28 +13,28 @@
       >
         <div class="recording-title">
           <router-link :to="routerLink(recording.recording)">
-            <span
-              :style="{
+            <span :style="{
                 color:
                   recording.rate === 100
                     ? '#d489fb'
                     : recording.rate > 0
                     ? '#8f00d8'
                     : '#333',
-              }"
-              >{{ recording.recording.title }}</span
-            >
-            <i v-if="recording.rate === 100" class="bi bi-check"></i>
-            <i v-else-if="recording.rate > 0" class="bi bi-music-note"></i>
+              }">{{ recording.recording.title }}</span>
+            <i
+              v-if="recording.rate === 100"
+              class="bi bi-check"
+            ></i>
+            <i
+              v-else-if="recording.rate > 0"
+              class="bi bi-music-note"
+            ></i>
           </router-link>
         </div>
         <div class="recording-date">
           {{ recording.recording.start.toLocaleString() }} -
           {{ recording.recording.end.toLocaleString() }}
-          <span class="octicons octicons-check"></span
-          ><span v-if="recording.rate > 0"
-            >({{ recording.rate }} % played)</span
-          >
+          <span class="octicons octicons-check"></span><span v-if="recording.rate > 0">({{ recording.rate }} % played)</span>
         </div>
       </div>
     </div>
@@ -68,6 +68,7 @@ class MonthDate {
     "Fri",
     "Sat",
   ];
+  static readonly DAY_STRING_JP = ["日", "月", "火", "水", "木", "金", "土"];
   constructor(
     public year: number,
     public month: number,
@@ -82,8 +83,15 @@ class MonthDate {
     );
   }
   toString(): string {
+    let dayString: string[];
+    if (navigator.language.toLowerCase().startsWith("ja")) {
+      dayString = MonthDate.DAY_STRING_JP;
+    } else {
+      dayString = MonthDate.DAY_STRING;
+    }
+    console.log(navigator.language);
     return `${this.year}/${this.month}/${this.date} (${
-      MonthDate.DAY_STRING[this.day]
+      dayString[this.day]
     })`;
   }
 }
